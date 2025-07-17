@@ -8,6 +8,12 @@ export default {
     extend: {
       fontSize: {
         10: '10px'
+      },
+      colors: {
+        dark: {
+          100: '#4B465C',
+          200: '#F8F7FA'
+        }
       }
     },
   },

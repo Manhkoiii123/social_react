@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 import { Suspense } from "react";
-import "@fontsource-variable/public-sans";
+// Supports weights 100-900
+import '@fontsource-variable/public-sans';
 
 const RootLayout = () => {
   return (
