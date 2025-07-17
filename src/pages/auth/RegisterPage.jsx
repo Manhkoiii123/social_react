@@ -7,14 +7,26 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
 const RegisterPage = () => {
+  const formSchema = yup.object().shape({
+    fullName: yup.string().required(),
+    email: yup
+      .string()
+      .matches(
+        /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+        "Email is not valid",
+      )
+      .required(),
+    password: yup.string().required(),
+  });
   const {
     control,
     handleSubmit,
     formState: { errors },
   } = useForm({
-    // resolver: yupResolver(formSchema),
+    resolver: yupResolver(formSchema),
   });
   const navigate = useNavigate();
   const dispatch = useDispatch();
