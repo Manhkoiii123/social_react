@@ -15,11 +15,13 @@
     "@fontsource-variable/public-sans": "^5.0.19",
     "@mui/icons-material": "^6.0.2",
     "@mui/material": "^6.0.2",
+    "@reduxjs/toolkit": "^2.8.2",
     "lodash": "^4.17.21",
     "mui-one-time-password-input": "^2.0.3",
     "react": "^19.0.0-rc-a03254bc-20240905",
     "react-dom": "^19.0.0-rc-a03254bc-20240905",
     "react-hook-form": "^7.53.0",
+    "react-redux": "^9.2.0",
     "react-router-dom": "^6.26.1"
   },
   "devDependencies": {

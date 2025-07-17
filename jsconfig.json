@@ -6,7 +6,9 @@
       "@libs/*": ["src/libs/*"],
       "@pages/*": ["src/pages/*"],
       "@hooks/*": ["src/hooks/*"],
-      "@context/*": ["src/context/*"]
+      "@context/*": ["src/context/*"],
+      "@redux/*": ["src/redux/*"],
+      "@services/*": ["src/services/*"]
     }
   }
 }
