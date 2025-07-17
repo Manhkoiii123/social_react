@@ -13,14 +13,20 @@ import LoginPage from "@pages/auth/LoginPage";
 import OTPVerifyPage from "@pages/auth/OTPVerifyPage";
 import { Provider } from "react-redux";
 import { store } from "@redux/store";
+import ProtectedLayout from "@pages/ProtectedLayout";
 
 const router = createBrowserRouter([
   {
     element: <RootLayout />,
     children: [
       {
-        path: "/",
-        element: <HomePage />,
+        element: <ProtectedLayout />,
+        children: [
+          {
+            path: "/",
+            element: <HomePage />,
+          },
+        ],
       },
       {
         element: <AuthLayout />,
@@ -50,5 +56,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <RouterProvider router={router} />
       </ModalProvider>
     </ThemeProvider>
+    ,
   </Provider>,
 );
