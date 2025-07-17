@@ -27,13 +27,17 @@ const RegisterPage = () => {
     formState: { errors },
   } = useForm({
     resolver: yupResolver(formSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      password: "",
+    },
   });
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [register, { data = {}, error, isError, isSuccess }] =
     useRegisterMutation();
   function onSubmit(formData) {
-    console.log({ formData });
     register(formData);
   }
 

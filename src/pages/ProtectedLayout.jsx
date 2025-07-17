@@ -1,3 +1,4 @@
+import Header from "@components/Header";
 import { saveUserInfo } from "@redux/slices/authSlice";
 import { useGetAuthUserQuery } from "@services/rootApi";
 import { useEffect } from "react";
@@ -24,6 +25,7 @@ const ProtectedLayout = () => {
 
   return (
     <div>
+      <Header />
       <Outlet />
     </div>
   );
