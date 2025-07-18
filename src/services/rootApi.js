@@ -106,6 +106,15 @@ export const rootApi = createApi({
         },
         invalidatesTags: ["POSTS"],
       }),
+      getPosts: builder.query({
+        query: ({ limit, offset } = {}) => {
+          return {
+            url: "/posts",
+            params: { limit, offset },
+          };
+        },
+        providesTags: [{ type: "POSTS" }],
+      }),
     };
   },
 });
@@ -116,4 +125,5 @@ export const {
   useGetAuthUserQuery,
   useCreatePostMutation,
   useRefreshTokenMutation,
+  useGetPostsQuery,
 } = rootApi;
