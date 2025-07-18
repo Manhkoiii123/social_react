@@ -3,6 +3,7 @@ import { Avatar, Button, CircularProgress } from "@mui/material";
 import { Link } from "react-router-dom";
 import MyButton from "@components/Button";
 import { useSendFriendRequestMutation } from "@services/rootApi";
+import { socket } from "@context/SocketProvider";
 
 const UserCard = ({
   id,
@@ -56,6 +57,27 @@ const UserCard = ({
         variant="outlined"
         onClick={async () => {
           await sendFriendRequest(id).unwrap();
+          /**
+           * code be
+           * socket.on(Events.FRIEND_REQUEST_SENT, (data) => {
+    const receiverId = data.receiverId;
+    const receiver = users[receiverId];
+
+    if (receiver) {
+        // Emit to receiver
+        io.to(receiver.socketId).emit(Events.FRIEND_REQUEST_RECEIVED, {
+            from: socket.authUser._id,
+            fullName: socket.authUser.fullName,
+            image: socket.authUser.image,
+            imagePublicId: socket.authUser.imagePublicId
+        });
+    }
+});
+           */
+          // ng dùng có cái id này là ng nhận được lời mới kết bạn
+          socket.emit("friendRequestSent", {
+            receiverId: id,
+          });
         }}
         disabled={isLoading}
       >

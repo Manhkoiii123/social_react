@@ -8,6 +8,7 @@ import {
   useCancelFriendRequestMutation,
   useGetPendingFriendRequestsQuery,
 } from "@services/rootApi";
+import { socket } from "@context/SocketProvider";
 
 const FriendRequestItem = ({ fullName, id }) => {
   const [acceptFriendRequest, { isLoading: isAccepting }] =
@@ -48,20 +49,20 @@ const FriendRequestItem = ({ fullName, id }) => {
 };
 
 const FriendRequests = () => {
-  const { data = [], isFetching, refetch } = useGetPendingFriendRequestsQuery();
+  const { data = [], refetch } = useGetPendingFriendRequestsQuery();
 
-  // useEffect(() => {
-  //   socket.on("friendRequestReceived", (data) => {
-  //     console.log("[friendRequestReceived]", { data });
-  //     if (data.from) {
-  //       refetch();
-  //     }
-  //   });
+  useEffect(() => {
+    // khi nhận được 1 request thi refetch
+    socket.on("friendRequestReceived", (data) => {
+      if (data.from) {
+        refetch();
+      }
+    });
 
-  //   return () => {
-  //     socket.off("friendRequestReceived");
-  //   };
-  // }, []);
+    return () => {
+      socket.off("friendRequestReceived");
+    };
+  }, []);
 
   return (
     <div className="card">

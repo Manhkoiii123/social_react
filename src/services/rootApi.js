@@ -15,38 +15,39 @@ const baseQuery = fetchBaseQuery({
 const baseQueryWithReauth = async (args, api, extraOptions) => {
   let result = await baseQuery(args, api, extraOptions);
 
-  if (
-    result?.error?.status === 401 &&
-    result?.error?.data?.message === "Token has expired."
-  ) {
-    const refreshToken = api.getState().auth.refreshToken;
+  if (result?.error?.status === 401) {
+    if (result?.error?.data?.message === "Token has expired.") {
+      const refreshToken = api.getState().auth.refreshToken;
 
-    if (refreshToken) {
-      const refreshResult = await baseQuery(
-        {
-          url: "/refresh-token",
-          body: { refreshToken },
-          method: "POST",
-        },
-        api,
-        extraOptions,
-      );
-
-      const newAccessToken = refreshResult?.data?.accessToken;
-
-      if (newAccessToken) {
-        api.dispatch(
-          login({
-            accessToken: newAccessToken,
-            refreshToken,
-          }),
+      if (refreshToken) {
+        const refreshResult = await baseQuery(
+          {
+            url: "/refresh-token",
+            body: { refreshToken },
+            method: "POST",
+          },
+          api,
+          extraOptions,
         );
 
-        result = await baseQuery(args, api, extraOptions);
-      } else {
-        api.dispatch(logOut());
-        window.location.href = "/login";
+        const newAccessToken = refreshResult?.data?.accessToken;
+
+        if (newAccessToken) {
+          api.dispatch(
+            login({
+              accessToken: newAccessToken,
+              refreshToken,
+            }),
+          );
+
+          result = await baseQuery(args, api, extraOptions);
+        } else {
+          api.dispatch(logOut());
+          window.location.href = "/login";
+        }
       }
+    } else {
+      window.location.href = "/login";
     }
   }
 
