@@ -15,12 +15,13 @@ import {
 } from "redux-persist";
 import { logOutMiddleware } from "./middlewares";
 import settingsReducer from "@redux/slices/settingsSlice";
+import dialogReducer from "@redux/slices/dialogSlice";
 
 const persistConfig = {
   key: "root",
   version: 1,
   storage,
-  blacklist: [rootApi.reducerPath],
+  blacklist: [rootApi.reducerPath, "dialog", "settings"],
 };
 
 const persistedReducer = persistReducer(
@@ -29,6 +30,7 @@ const persistedReducer = persistReducer(
     auth: authReducer,
     snackbar: snackbarReducer,
     settings: settingsReducer,
+    dialog: dialogReducer,
     [rootApi.reducerPath]: rootApi.reducer,
   }),
 );

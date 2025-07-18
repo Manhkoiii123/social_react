@@ -2,7 +2,6 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import RootLayout from "@pages/RootLayout";
-import ModalProvider from "@context/ModalProvider";
 import { lazy } from "react";
 import { ThemeProvider } from "@mui/material";
 const HomePage = lazy(() => import("@pages/HomePage"));
@@ -15,6 +14,7 @@ import { Provider } from "react-redux";
 import { persistor, store } from "@redux/store";
 import ProtectedLayout from "@pages/ProtectedLayout";
 import { PersistGate } from "redux-persist/integration/react";
+import Dialog from "@components/Dialog";
 const router = createBrowserRouter([
   {
     element: <RootLayout />,
@@ -53,9 +53,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <Provider store={store}>
     <PersistGate loading={<p>Loading...</p>} persistor={persistor}>
       <ThemeProvider theme={theme}>
-        <ModalProvider>
-          <RouterProvider router={router} />
-        </ModalProvider>
+        <RouterProvider router={router} />
+        <Dialog />
       </ThemeProvider>
     </PersistGate>
   </Provider>,
