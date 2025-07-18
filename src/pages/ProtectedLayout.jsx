@@ -1,5 +1,6 @@
 import Header from "@components/Header";
 import Loading from "@components/Loading";
+import SocketProvider from "@context/SocketProvider";
 import { saveUserInfo } from "@redux/slices/authSlice";
 import { useGetAuthUserQuery } from "@services/rootApi";
 import { useEffect } from "react";
@@ -21,10 +22,14 @@ const ProtectedLayout = () => {
   }
 
   return (
-    <div>
-      <Header />
-      <Outlet />
-    </div>
+    <SocketProvider>
+      <div>
+        <Header />
+        <div className="bg-dark-200">
+          <Outlet />
+        </div>
+      </div>
+    </SocketProvider>
   );
 };
 export default ProtectedLayout;
