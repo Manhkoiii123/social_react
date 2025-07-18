@@ -9,14 +9,13 @@ import {
 } from "@mui/material";
 import { closeDialog } from "@redux/slices/dialogSlice";
 import { openSnackbar } from "@redux/slices/snackbarSlice";
-// import { useCreatePostMutation } from "@services/rootApi";
+import { useCreatePostMutation } from "@services/rootApi";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 
 const NewPostDialog = ({ userInfo }) => {
   const [image, setImage] = useState(null);
-  // const [createNewPost, { data, isSuccess, isLoading }] =
-  //   useCreatePostMutation();
+  const [createNewPost, { isLoading }] = useCreatePostMutation();
 
   const dispatch = useDispatch();
 
@@ -28,7 +27,7 @@ const NewPostDialog = ({ userInfo }) => {
       formData.append("content", content);
       formData.append("image", image);
 
-      // await createNewPost(formData).unwrap();
+      await createNewPost(formData).unwrap();
       dispatch(closeDialog());
       dispatch(openSnackbar({ message: "Create Post Successfully!" }));
     } catch (error) {
@@ -66,7 +65,7 @@ const NewPostDialog = ({ userInfo }) => {
           variant="contained"
           onClick={handleCreateNewPost}
         >
-          {/* {isLoading && <CircularProgress size="16px" className="mr-1" />} */}
+          {isLoading && <CircularProgress size="16px" className="mr-1" />}
           Post
         </Button>
       </DialogActions>
