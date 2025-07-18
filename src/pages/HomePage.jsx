@@ -5,7 +5,7 @@ import Sidebar from "@components/Sidebar";
 
 function HomePage() {
   return (
-    <div className="flex gap-4 bg-dark-200 p-6">
+    <div className="container">
       <Sidebar />
       <div className="flex flex-1 flex-col gap-4">
         <PostCreation />

@@ -16,6 +16,7 @@ import ProtectedLayout from "@pages/ProtectedLayout";
 import { PersistGate } from "redux-persist/integration/react";
 import Dialog from "@components/Dialog";
 import Loading from "@components/Loading";
+import SearchUsersPage from "@pages/SearchUsersPage";
 const router = createBrowserRouter([
   {
     element: <RootLayout />,
@@ -26,6 +27,10 @@ const router = createBrowserRouter([
           {
             path: "/",
             element: <HomePage />,
+          },
+          {
+            path: "/search/users",
+            element: <SearchUsersPage />,
           },
         ],
       },

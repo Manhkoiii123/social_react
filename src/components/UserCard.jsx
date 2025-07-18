@@ -1,0 +1,84 @@
+import { Check, Close, MessageOutlined, PersonAdd } from "@mui/icons-material";
+import { Avatar, Button, CircularProgress } from "@mui/material";
+import { Link } from "react-router-dom";
+import MyButton from "@components/Button";
+import { useSendFriendRequestMutation } from "@services/rootApi";
+
+const UserCard = ({
+  id,
+  isFriend,
+  fullName = "",
+  requestSent,
+  requestReceived,
+}) => {
+  const [sendFriendRequest, { isLoading }] = useSendFriendRequestMutation();
+  function getActionButtons() {
+    if (isFriend) {
+      return (
+        <Button variant="contained" size="small">
+          <MessageOutlined className="mr-1" fontSize="small" /> Message
+        </Button>
+      );
+    }
+
+    if (requestSent) {
+      return (
+        <Button variant="contained" size="small" disabled>
+          <Check className="mr-1" fontSize="small" /> Request Sent
+        </Button>
+      );
+    }
+
+    if (requestReceived) {
+      return (
+        <div className="mt-2 space-x-1">
+          <MyButton
+            variant="contained"
+            size="small"
+            icon={<Check className="mr-1" fontSize="small" />}
+          >
+            Accept
+          </MyButton>
+
+          <MyButton
+            variant="outlined"
+            size="small"
+            icon={<Close className="mr-1" fontSize="small" />}
+          >
+            Cancel
+          </MyButton>
+        </div>
+      );
+    }
+
+    return (
+      <Button
+        variant="outlined"
+        onClick={async () => {
+          await sendFriendRequest(id).unwrap();
+        }}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <CircularProgress className="mr-1 animate-spin" size="16px" />
+        ) : (
+          <PersonAdd className="mr-1" fontSize="small" />
+        )}{" "}
+        Add Friend
+      </Button>
+    );
+  }
+
+  return (
+    <div className="card flex flex-col items-center">
+      <Avatar className="mb-3 !h-12 !w-12 !bg-primary-main">
+        {fullName[0]?.toUpperCase()}
+      </Avatar>
+      <Link>
+        <p className="text-lg font-bold">{fullName}</p>
+      </Link>
+      <div className="mt-4">{getActionButtons()}</div>
+    </div>
+  );
+};
+export default UserCard;

@@ -13,7 +13,7 @@ import {
 import { toggleDrawer } from "@redux/slices/settingsSlice";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Header = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -21,7 +21,8 @@ const Header = () => {
   const { logOut } = useLogout();
   const { isMediumLayout } = useDetectLayout();
   const dispatch = useDispatch();
-
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
@@ -51,8 +52,8 @@ const Header = () => {
 
   return (
     <div>
-      <AppBar color="white" position="static" className="py-4">
-        <Toolbar className="!min-h-fit justify-between">
+      <AppBar color="white" position="static">
+        <Toolbar className="container !min-h-fit justify-between">
           {isMediumLayout ? (
             <IconButton onClick={() => dispatch(toggleDrawer())}>
               <MenuIcon />
@@ -68,6 +69,19 @@ const Header = () => {
                   variant="standard"
                   name="search"
                   placeholder="Search"
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      navigate("/search/users", {
+                        state: {
+                          searchTerm,
+                        },
+                      });
+                    }
+                  }}
                   slotProps={{
                     input: { className: "h-10 px-3 py-2" },
                     htmlInput: { className: "!p-0" },
@@ -93,7 +107,6 @@ const Header = () => {
               </Badge>
             </IconButton>
             <IconButton size="medium" onClick={handleUserProfileClick}>
-              {/* <AccountCircle /> */}
               <Avatar className="!bg-primary-main">
                 {userInfo.fullName?.[0]?.toUpperCase()}
               </Avatar>
