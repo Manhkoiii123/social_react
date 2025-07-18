@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import { useDetectLayout, useLogout, useUserInfo } from "@hooks/index";
 import { Notifications, Search, Menu as MenuIcon } from "@mui/icons-material";
 import {
@@ -11,7 +10,7 @@ import {
   TextField,
   Toolbar,
 } from "@mui/material";
-// import { toggleDrawer } from "@redux/slices/settingsSlice";
+import { toggleDrawer } from "@redux/slices/settingsSlice";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
@@ -55,8 +54,7 @@ const Header = () => {
       <AppBar color="white" position="static" className="py-4">
         <Toolbar className="!min-h-fit justify-between">
           {isMediumLayout ? (
-            // onClick={() => dispatch(toggleDrawer())}
-            <IconButton>
+            <IconButton onClick={() => dispatch(toggleDrawer())}>
               <MenuIcon />
             </IconButton>
           ) : (

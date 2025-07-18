@@ -14,6 +14,7 @@ import {
   persistStore,
 } from "redux-persist";
 import { logOutMiddleware } from "./middlewares";
+import settingsReducer from "@redux/slices/settingsSlice";
 
 const persistConfig = {
   key: "root",
@@ -27,6 +28,7 @@ const persistedReducer = persistReducer(
   combineReducers({
     auth: authReducer,
     snackbar: snackbarReducer,
+    settings: settingsReducer,
     [rootApi.reducerPath]: rootApi.reducer,
   }),
 );

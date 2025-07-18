@@ -3,5 +3,11 @@
 @tailwind utilities;
 
 body {
-  font-family: 'Public Sans Variable', sans-serif;
+  font-family: "Public Sans Variable", sans-serif;
+}
+
+@layer components {
+  .card {
+    @apply rounded bg-white p-4 shadow;
+  }
 }
