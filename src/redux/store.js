@@ -16,6 +16,7 @@ import {
 import { logOutMiddleware } from "./middlewares";
 import settingsReducer from "@redux/slices/settingsSlice";
 import dialogReducer from "@redux/slices/dialogSlice";
+import { setupListeners } from "@reduxjs/toolkit/query";
 
 const persistConfig = {
   key: "root",
@@ -45,5 +46,5 @@ export const store = configureStore({
     }).concat(logOutMiddleware, rootApi.middleware);
   },
 });
-
+setupListeners(store.dispatch); // thêm thì mới dùng dudwoj refetchOnFocus
 export const persistor = persistStore(store);

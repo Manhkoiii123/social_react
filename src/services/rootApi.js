@@ -57,6 +57,8 @@ export const rootApi = createApi({
   reducerPath: "rootApi",
   baseQuery: baseQueryWithReauth,
   tagTypes: ["POSTS", "USERS", "PENDING_FRIEND_REQUEST"],
+  refetchOnFocus: true,
+  refetchOnReconnect: true,
   endpoints: (builder) => {
     return {
       register: builder.mutation({
