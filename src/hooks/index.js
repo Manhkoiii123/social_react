@@ -52,10 +52,11 @@ export const useLazyLoadPosts = () => {
       }
       previousDataRef.current = data;
       setPosts((prevPosts) => {
+        if (offset === 0) return data; // page đầu tiên thì return về data luôn
         return [...prevPosts, ...data];
       });
     }
-  }, [data, isSuccess]);
+  }, [data, isSuccess, offset]);
 
   const loadMore = useCallback(() => {
     setOffset((offset) => offset + limit);
