@@ -1,9 +1,13 @@
 import { Check, Close, MessageOutlined, PersonAdd } from "@mui/icons-material";
 import { Avatar, Button, CircularProgress } from "@mui/material";
+import {
+  useAcceptFriendRequestMutation,
+  useCancelFriendRequestMutation,
+  useSendFriendRequestMutation,
+} from "@services/rootApi";
 import { Link } from "react-router-dom";
-import MyButton from "@components/Button";
-import { useSendFriendRequestMutation } from "@services/rootApi";
 import { socket } from "@context/SocketProvider";
+import MyButton from "@components/Button";
 
 const UserCard = ({
   id,
@@ -13,6 +17,11 @@ const UserCard = ({
   requestReceived,
 }) => {
   const [sendFriendRequest, { isLoading }] = useSendFriendRequestMutation();
+  const [acceptFriendRequest, { isLoading: isAccepting }] =
+    useAcceptFriendRequestMutation();
+  const [cancelFriendRequest, { isLoading: isCanceling }] =
+    useCancelFriendRequestMutation();
+
   function getActionButtons() {
     if (isFriend) {
       return (
@@ -36,7 +45,9 @@ const UserCard = ({
           <MyButton
             variant="contained"
             size="small"
+            onClick={() => acceptFriendRequest(id)}
             icon={<Check className="mr-1" fontSize="small" />}
+            isLoading={isAccepting}
           >
             Accept
           </MyButton>
@@ -44,7 +55,9 @@ const UserCard = ({
           <MyButton
             variant="outlined"
             size="small"
+            onClick={() => cancelFriendRequest(id)}
             icon={<Close className="mr-1" fontSize="small" />}
+            isLoading={isCanceling}
           >
             Cancel
           </MyButton>

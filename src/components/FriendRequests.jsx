@@ -2,13 +2,13 @@ import { Check, Close } from "@mui/icons-material";
 import { Avatar } from "@mui/material";
 
 import { useEffect } from "react";
-import Button from "./Button";
 import {
   useAcceptFriendRequestMutation,
   useCancelFriendRequestMutation,
   useGetPendingFriendRequestsQuery,
 } from "@services/rootApi";
 import { socket } from "@context/SocketProvider";
+import Button from "./Button";
 
 const FriendRequestItem = ({ fullName, id }) => {
   const [acceptFriendRequest, { isLoading: isAccepting }] =
