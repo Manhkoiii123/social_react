@@ -41,9 +41,9 @@ export const useLazyLoadPosts = () => {
 
   const { data, isSuccess, isFetching } = useGetPostsQuery({ offset, limit });
 
-  // tránh lặp data do chạy 2 lần cái useEff ở dưới => dùng ref check
-  const previousDataRef = useRef();
+  console.log("useLazyLoadPosts", { data, offset });
 
+  const previousDataRef = useRef();
   useEffect(() => {
     if (isSuccess && data && previousDataRef.current !== data) {
       if (!data.length) {
@@ -52,11 +52,11 @@ export const useLazyLoadPosts = () => {
       }
       previousDataRef.current = data;
       setPosts((prevPosts) => {
-        if (offset === 0) return data; // page đầu tiên thì return về data luôn
+        if (offset === 0) return data;
         return [...prevPosts, ...data];
       });
     }
-  }, [data, isSuccess, offset]);
+  }, [data, isSuccess]);
 
   const loadMore = useCallback(() => {
     setOffset((offset) => offset + limit);
@@ -66,6 +66,12 @@ export const useLazyLoadPosts = () => {
     hasMore,
     loadMore,
     isFetching,
+    offset,
+    resetFn: () => {
+      setOffset(0);
+      setHasMore(true);
+      previousDataRef.current = null;
+    },
   });
 
   return { isFetching, posts };
@@ -75,17 +81,25 @@ export const useInfiniteScroll = ({
   hasMore,
   loadMore,
   isFetching,
+  offset,
+  resetFn,
   threshold = 50,
   throttleMs = 500,
 }) => {
   const handleScroll = useMemo(() => {
     return throttle(() => {
-      if (!hasMore) {
-        return;
-      }
       const scrollTop = document.documentElement.scrollTop;
       const scrollHeight = document.documentElement.scrollHeight;
       const clientHeight = document.documentElement.clientHeight;
+
+      if (scrollTop === 0 && offset > 0) {
+        resetFn();
+        return;
+      }
+
+      if (!hasMore) {
+        return;
+      }
 
       if (clientHeight + scrollTop + threshold >= scrollHeight && !isFetching) {
         loadMore();
