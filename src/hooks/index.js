@@ -10,6 +10,9 @@ import { useState } from "react";
 import { useRef } from "react";
 import { useEffect } from "react";
 import { useGetPostsQuery } from "@services/postApi";
+import { useCreateNotificationMutation } from "@services/notificationApi";
+import { socket } from "@context/SocketProvider";
+import { Events } from "@libs/constants";
 export const useLogout = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -109,4 +112,31 @@ export const useInfiniteScroll = ({
       handleScroll.cancel();
     };
   }, [handleScroll]);
+};
+
+export const useNotifications = () => {
+  const [createNotificationMutation] = useCreateNotificationMutation();
+  const { _id: currentUserId } = useUserInfo();
+
+  async function createNotification({
+    receiverUserId,
+    postId,
+    notificationType,
+    notificationTypeId,
+  }) {
+    if (receiverUserId === currentUserId) {
+      return;
+    }
+
+    const notification = await createNotificationMutation({
+      userId: receiverUserId,
+      postId,
+      notificationType,
+      notificationTypeId,
+    }).unwrap();
+
+    socket.emit(Events.CREATE_NOTIFICATION, notification);
+  }
+
+  return { createNotification };
 };
