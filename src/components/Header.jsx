@@ -1,5 +1,5 @@
 import { useDetectLayout, useLogout, useUserInfo } from "@hooks/index";
-import { , Search, Menu as MenuIcon } from "@mui/icons-material";
+import { Search, Menu as MenuIcon } from "@mui/icons-material";
 import {
   AppBar,
   Avatar,
