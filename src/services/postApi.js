@@ -166,6 +166,29 @@ export const postApi = rootApi.injectEndpoints({
             method: "DELETE",
           };
         },
+        onQueryStarted: async (
+          args,
+          { dispatch, queryFulfilled, getState },
+        ) => {
+          const store = getState();
+          const patchResult = dispatch(
+            rootApi.util.updateQueryData("getPosts", "allPosts", (draft) => {
+              const currentPost = draft.entities[args];
+              if (currentPost) {
+                currentPost.likes = currentPost.likes.filter(
+                  (like) => like.author._id !== store.auth.userInfo._id,
+                );
+              }
+            }),
+          );
+
+          try {
+            await queryFulfilled;
+          } catch (err) {
+            console.log({ err });
+            patchResult.undo();
+          }
+        },
       }),
     };
   },

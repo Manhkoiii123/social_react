@@ -1,11 +1,12 @@
 import Post from "./Post";
 import Loading from "./Loading";
 import { useLazyLoadPosts, useUserInfo } from "@hooks/index";
-import { useLikePostMutation } from "@services/postApi";
+import { useLikePostMutation, useUnlikePostMutation } from "@services/postApi";
 
 const PostList = () => {
   const { isFetching, posts } = useLazyLoadPosts();
   const [likePost] = useLikePostMutation();
+  const [unlikePost] = useUnlikePostMutation();
   const { _id } = useUserInfo();
   return (
     <div className="flex flex-col gap-4">
@@ -21,7 +22,11 @@ const PostList = () => {
           comments={post.comments}
           isLiked={post.likes.some((like) => like.author?._id === _id)}
           onLike={async (id) => {
-            await likePost(id).unwrap();
+            if (post.likes.some((like) => like.author?._id === _id)) {
+              await unlikePost({ postId: id });
+            } else {
+              await likePost({ postId: id });
+            }
           }}
         />
       ))}
