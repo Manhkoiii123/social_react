@@ -33,45 +33,46 @@ export const useDetectLayout = () => {
   return { isMediumLayout };
 };
 
+// update theo adapter trong redux
 export const useLazyLoadPosts = () => {
   const [offset, setOffset] = useState(0);
   const limit = 10;
-  const [posts, setPosts] = useState([]);
   const [hasMore, setHasMore] = useState(true);
 
-  const { data, isSuccess, isFetching } = useGetPostsQuery({ offset, limit });
+  const {
+    data = { ids: [], entities: [] },
+    isFetching,
+    refetch,
+  } = useGetPostsQuery({ offset, limit });
 
-  console.log("useLazyLoadPosts", { data, offset });
+  const posts = data.ids.map((id) => data.entities[id]);
 
-  const previousDataRef = useRef();
+  const prevPostCountRef = useRef(0);
+
   useEffect(() => {
-    if (isSuccess && data && previousDataRef.current !== data) {
-      if (!data.length) {
+    if (!isFetching && data && hasMore) {
+      const currentPostCount = data.ids.length;
+      const newFetchedCount = currentPostCount - prevPostCountRef.current;
+      if (newFetchedCount === 0) {
         setHasMore(false);
-        return;
+      } else {
+        prevPostCountRef.current = currentPostCount;
       }
-      previousDataRef.current = data;
-      setPosts((prevPosts) => {
-        if (offset === 0) return data;
-        return [...prevPosts, ...data];
-      });
     }
-  }, [data, isSuccess]);
+  }, [data, isFetching, hasMore]);
 
-  const loadMore = useCallback(() => {
+  const loadMore = useCallback(async () => {
     setOffset((offset) => offset + limit);
   }, []);
+
+  useEffect(() => {
+    refetch();
+  }, [offset, refetch]);
 
   useInfiniteScroll({
     hasMore,
     loadMore,
     isFetching,
-    offset,
-    resetFn: () => {
-      setOffset(0);
-      setHasMore(true);
-      previousDataRef.current = null;
-    },
   });
 
   return { isFetching, posts };
@@ -81,8 +82,6 @@ export const useInfiniteScroll = ({
   hasMore,
   loadMore,
   isFetching,
-  offset,
-  resetFn,
   threshold = 50,
   throttleMs = 500,
 }) => {
@@ -91,11 +90,6 @@ export const useInfiniteScroll = ({
       const scrollTop = document.documentElement.scrollTop;
       const scrollHeight = document.documentElement.scrollHeight;
       const clientHeight = document.documentElement.clientHeight;
-
-      if (scrollTop === 0 && offset > 0) {
-        resetFn();
-        return;
-      }
 
       if (!hasMore) {
         return;
