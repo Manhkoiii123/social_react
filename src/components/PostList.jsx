@@ -1,13 +1,18 @@
 import Post from "./Post";
 import Loading from "./Loading";
 import { useLazyLoadPosts, useNotifications, useUserInfo } from "@hooks/index";
-import { useLikePostMutation, useUnlikePostMutation } from "@services/postApi";
+import {
+  useCreateCommentMutation,
+  useLikePostMutation,
+  useUnlikePostMutation,
+} from "@services/postApi";
 
 const PostList = () => {
   const { isFetching, posts } = useLazyLoadPosts();
   const [likePost] = useLikePostMutation();
   const [unlikePost] = useUnlikePostMutation();
   const { createNotification } = useNotifications();
+  const [createComment] = useCreateCommentMutation();
   const { _id } = useUserInfo();
   return (
     <div className="flex flex-col gap-4">
@@ -34,6 +39,16 @@ const PostList = () => {
                 notificationTypeId: res._id,
               });
             }
+          }}
+          onComment={async ({ comment, postId }) => {
+            const res = await createComment({ comment, postId }).unwrap();
+
+            createNotification({
+              receiverUserId: post.author?._id,
+              postId: post._id,
+              notificationType: "comment",
+              notificationTypeId: res._id,
+            });
           }}
         />
       ))}

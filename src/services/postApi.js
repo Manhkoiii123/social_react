@@ -190,6 +190,64 @@ export const postApi = rootApi.injectEndpoints({
           }
         },
       }),
+      createComment: builder.mutation({
+        query: ({ postId, comment }) => {
+          return {
+            url: `/posts/${postId}/comments`,
+            method: "POST",
+            body: { comment },
+          };
+        },
+        onQueryStarted: async (
+          params,
+          { dispatch, queryFulfilled, getState },
+        ) => {
+          const tempId = crypto.randomUUID();
+          const store = getState();
+
+          const optimisticComment = {
+            _id: tempId,
+            comment: params.comment,
+            author: {
+              _id: store.auth.userInfo._id,
+              fullName: store.auth.userInfo.fullName,
+            },
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+
+          const patchResult = dispatch(
+            rootApi.util.updateQueryData("getPosts", "allPosts", (draft) => {
+              const currentPost = draft.entities[params.postId];
+
+              if (currentPost) {
+                currentPost.comments.push(optimisticComment);
+              }
+            }),
+          );
+
+          try {
+            const { data } = await queryFulfilled;
+            dispatch(
+              rootApi.util.updateQueryData("getPosts", "allPosts", (draft) => {
+                const currentPost = draft.entities[params.postId];
+                if (currentPost) {
+                  const commentIndex = currentPost.comments.findIndex(
+                    (comment) => comment._id === tempId,
+                  );
+
+                  if (commentIndex !== -1) {
+                    currentPost.comments[commentIndex] = data;
+                  }
+                }
+              }),
+            );
+          } catch (err) {
+            console.log({ err });
+            patchResult.undo();
+          }
+        },
+      }),
     };
   },
 });
@@ -198,4 +256,5 @@ export const {
   useGetPostsQuery,
   useLikePostMutation,
   useUnlikePostMutation,
+  useCreateCommentMutation,
 } = postApi;

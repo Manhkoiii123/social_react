@@ -1,5 +1,9 @@
+import { Events } from "@libs/constants";
+import { generateNotificationMessage } from "@libs/utils";
+import { openSnackbar } from "@redux/slices/snackbarSlice";
+import { rootApi } from "@services/rootApi";
 import { createContext, useContext, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { io } from "socket.io-client";
 
 export const socket = io("https://api.holetex.com", {
@@ -15,6 +19,7 @@ export const useModalContext = () => {
 };
 
 const SocketProvider = ({ children }) => {
+  const dispatch = useDispatch();
   const token = useSelector((store) => store.auth.accessToken);
 
   useEffect(() => {
@@ -35,6 +40,28 @@ const SocketProvider = ({ children }) => {
       socket.disconnect();
     };
   }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+    socket.on(Events.CREATE_NOTIFICATION_REQUEST, (data) => {
+      dispatch(
+        rootApi.util.updateQueryData("getNotifications", undefined, (draft) => {
+          draft.notifications.unshift(data);
+        }),
+      );
+
+      dispatch(
+        openSnackbar({
+          message: generateNotificationMessage(data),
+          type: "info",
+        }),
+      );
+    });
+
+    return () => {
+      socket.off(Events.CREATE_NOTIFICATION_REQUEST);
+    };
+  }, [dispatch]);
 
   return <SocketContext.Provider value={{}}>{children}</SocketContext.Provider>;
 };
