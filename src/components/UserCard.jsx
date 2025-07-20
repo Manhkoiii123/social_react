@@ -1,13 +1,14 @@
 import { Check, Close, MessageOutlined, PersonAdd } from "@mui/icons-material";
 import { Avatar, Button, CircularProgress } from "@mui/material";
+
+import { Link } from "react-router-dom";
+import { socket } from "@context/SocketProvider";
+import MyButton from "@components/Button";
 import {
   useAcceptFriendRequestMutation,
   useCancelFriendRequestMutation,
   useSendFriendRequestMutation,
-} from "@services/rootApi";
-import { Link } from "react-router-dom";
-import { socket } from "@context/SocketProvider";
-import MyButton from "@components/Button";
+} from "@services/friendApi";
 
 const UserCard = ({
   id,

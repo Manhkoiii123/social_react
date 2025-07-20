@@ -6,7 +6,7 @@ import {
   useAcceptFriendRequestMutation,
   useCancelFriendRequestMutation,
   useGetPendingFriendRequestsQuery,
-} from "@services/rootApi";
+} from "@services/friendApi";
 import { socket } from "@context/SocketProvider";
 import Button from "./Button";
 

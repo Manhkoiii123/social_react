@@ -7,9 +7,9 @@ import { useMemo } from "react";
 import { throttle } from "lodash";
 import { useCallback } from "react";
 import { useState } from "react";
-import { useGetPostsQuery } from "@services/rootApi";
 import { useRef } from "react";
 import { useEffect } from "react";
+import { useGetPostsQuery } from "@services/postApi";
 export const useLogout = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
