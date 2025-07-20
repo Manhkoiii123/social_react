@@ -1,4 +1,25 @@
+import { createEntityAdapter } from "@reduxjs/toolkit";
 import { rootApi } from "./rootApi";
+export const postsAdapter = createEntityAdapter({
+  selectId: (post) => post._id,
+  sortComparer: (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt),
+});
+
+const initialState = postsAdapter.getInitialState();
+
+// { ids: [], entities: []}
+
+/*
+ Entity Adapter giup quan ly du lieu o ngay trong redux va 
+ no se giup chuan hoa du lieu theo dang
+ {
+  ids: [1, 3], entities: [{id: 1, content: '123'},{id: 3, content: 'abc'}]
+ }
+  cung cap them cho chung ta cac methods de de dang cap nhat xoa sua du lieu ma da duoc chuan hoa o phia tren
+  no se giup chung ta chuan hoa du lieu + tranh bi trung lap du lieu. va lam cho ung dung cua chung ta se 
+  luu tru du lieu tap trung, thay vi phai tao ra cac state nhu posts (useLazyLoadPost). luon luon chi 
+  co 1 nguon du lieu duy nhat hay con goi la single source of truth 
+*/
 
 export const postApi = rootApi.injectEndpoints({
   endpoints: (builder) => {
@@ -35,32 +56,20 @@ export const postApi = rootApi.injectEndpoints({
             __v: 0,
           };
 
-          // data đang có trong store => update data
+          // data đang có trong store => update data trong adpater
           const patchResult = dispatch(
-            rootApi.util.updateQueryData(
-              "getPosts", // endpoint là getPosts
-              { limit: 10, offset: 0 }, // params
-              (draft) => {
-                // draft là tượng trung cho danh sahcs bài post đang có trong redux
-                draft.unshift(newPost);
-              },
-            ),
+            rootApi.util.updateQueryData("getPosts", "allPosts", (draft) => {
+              postsAdapter.addOne(draft, newPost);
+            }),
           );
 
-          // dùng data thật từ api trả về => thay vào data nháp
           try {
             const { data } = await queryFulfilled;
             dispatch(
-              rootApi.util.updateQueryData(
-                "getPosts",
-                { limit: 10, offset: 0 },
-                (draft) => {
-                  const index = draft.findIndex((post) => post._id === tempId);
-                  if (index !== -1) {
-                    draft[index] = data;
-                  }
-                },
-              ),
+              rootApi.util.updateQueryData("getPosts", "allPosts", (draft) => {
+                postsAdapter.removeOne(draft, tempId);
+                postsAdapter.addOne(draft, data);
+              }),
             );
           } catch (err) {
             console.log({ err });
@@ -75,7 +84,88 @@ export const postApi = rootApi.injectEndpoints({
             params: { limit, offset },
           };
         },
+        // chuẩn hóa sang entity trong redux
+        transformResponse: (response) => {
+          // response là cái gì trả về từ api
+          // đẩy vào adapter
+          return postsAdapter.upsertMany(initialState, response);
+        },
+        serializeQueryArgs: () => "allPosts",
+        merge: (currentCache, newItems) => {
+          // gop du lieu tu request truoc do + voi du lieu moi sau nay, no luon dam bao (entity adapter)
+          // du lieu se ko bi duplicate boi vi no da co 1 he thong cac ids duy nhat
+          return postsAdapter.upsertMany(currentCache, newItems.entities);
+        },
         providesTags: [{ type: "POSTS" }],
+      }),
+      likePost: builder.mutation({
+        query: (postId) => {
+          return {
+            url: `/posts/${postId}/like`,
+            method: "POST",
+          };
+        },
+        // fake update ngay lập tức mà k cần loading khi like
+        // query các bài post đang được cache => tìm bài đang lik => update lại arraylike
+        onQueryStarted: async (
+          args, // là cái postId luôn
+          { dispatch, queryFulfilled, getState },
+        ) => {
+          const store = getState();
+          const tempId = crypto.randomUUID();
+          const patchResult = dispatch(
+            rootApi.util.updateQueryData("getPosts", "allPosts", (draft) => {
+              const currentPost = draft.entities[args];
+              if (currentPost) {
+                currentPost.likes.push({
+                  author: {
+                    _id: store.auth.userInfo._id,
+                    fullName: store.auth.userInfo.fullName,
+                  },
+                  _id: tempId,
+                });
+              }
+            }),
+          );
+
+          try {
+            const { data } = await queryFulfilled;
+
+            dispatch(
+              rootApi.util.updateQueryData("getPosts", "allPosts", (draft) => {
+                const currentPost = draft.entities[args];
+                if (currentPost) {
+                  currentPost.likes = currentPost.likes.map((like) => {
+                    if (like._id === tempId) {
+                      return {
+                        author: {
+                          _id: store.auth.userInfo._id,
+                          fullName: store.auth.userInfo.fullName,
+                        },
+                        createdAt: data.createdAt,
+                        updatedAt: data.updatedAt,
+                        _id: data._id,
+                      };
+                    }
+
+                    return like;
+                  });
+                }
+              }),
+            );
+          } catch (err) {
+            console.log({ err });
+            patchResult.undo();
+          }
+        },
+      }),
+      unlikePost: builder.mutation({
+        query: (postId) => {
+          return {
+            url: `/posts/${postId}/unlike`,
+            method: "DELETE",
+          };
+        },
       }),
     };
   },
@@ -85,5 +175,4 @@ export const {
   useGetPostsQuery,
   useLikePostMutation,
   useUnlikePostMutation,
-  useCreateCommentMutation,
 } = postApi;
