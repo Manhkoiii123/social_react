@@ -4,12 +4,14 @@ import { Avatar, Button, IconButton, TextField } from "@mui/material";
 import classNames from "classnames";
 import dayjs from "dayjs";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const Post = ({
   id,
   fullName = "",
   createdAt,
   content = "",
+  authorId,
   image,
   likes = [],
   comments = [],
@@ -23,11 +25,15 @@ const Post = ({
   return (
     <div className="card">
       <div className="mb-3 flex gap-3">
-        <Avatar className="!bg-primary-main">
-          {fullName?.[0]?.toUpperCase()}
-        </Avatar>
+        <Link to={`/users/${authorId}`}>
+          <Avatar className="!bg-primary-main">
+            {fullName?.[0]?.toUpperCase()}
+          </Avatar>
+        </Link>
         <div>
-          <p className="font-bold">{fullName}</p>
+          <Link to={`/users/${authorId}`}>
+            <p className="font-bold">{fullName}</p>
+          </Link>
           <p className="text-sm text-dark-400">
             {dayjs(createdAt).format("DD/MM/YYYY HH:mm")}
           </p>

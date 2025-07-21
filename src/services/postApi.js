@@ -1,8 +1,9 @@
 import { createEntityAdapter } from "@reduxjs/toolkit";
 import { rootApi } from "./rootApi";
+
 export const postsAdapter = createEntityAdapter({
   selectId: (post) => post._id,
-  sortComparer: (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt),
+  sortComparer: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
 });
 
 const initialState = postsAdapter.getInitialState();
@@ -32,15 +33,12 @@ export const postApi = rootApi.injectEndpoints({
             body: formData,
           };
         },
-        // mỗi khi craete được gọi => hàm này chạy ngay
         onQueryStarted: async (
-          args, // form data có dữ liệu gì khi gửi lên khi create post
-          // queryFulfilled là 1 promise đợi cho api có dữ liệu trả về => lấy được data trả về
+          args,
           { dispatch, queryFulfilled, getState },
         ) => {
           const store = getState();
           const tempId = crypto.randomUUID();
-          // fake data trả về của api createPost
           const newPost = {
             _id: tempId,
             likes: [],
@@ -56,24 +54,44 @@ export const postApi = rootApi.injectEndpoints({
             __v: 0,
           };
 
-          // data đang có trong store => update data trong adpater
-          const patchResult = dispatch(
-            rootApi.util.updateQueryData("getPosts", "allPosts", (draft) => {
-              postsAdapter.addOne(draft, newPost);
-            }),
+          const userProfilePostsArgs = rootApi.util.selectCachedArgsForQuery(
+            store,
+            "getPostsByAuthorId",
           );
+
+          const patchResults = [];
+          const cachingPairs = [
+            ...userProfilePostsArgs.map((arg) => [
+              "getPostsByAuthorId",
+              { userId: arg.userId },
+            ]),
+            ["getPosts", "allPosts"],
+          ];
+
+          cachingPairs.forEach(([endpoint, key]) => {
+            const patchResult = dispatch(
+              rootApi.util.updateQueryData(endpoint, key, (draft) => {
+                postsAdapter.addOne(draft, newPost);
+              }),
+            );
+
+            patchResults.push(patchResult);
+          });
 
           try {
             const { data } = await queryFulfilled;
-            dispatch(
-              rootApi.util.updateQueryData("getPosts", "allPosts", (draft) => {
-                postsAdapter.removeOne(draft, tempId);
-                postsAdapter.addOne(draft, data);
-              }),
-            );
+
+            cachingPairs.forEach(([endpoint, key]) => {
+              dispatch(
+                rootApi.util.updateQueryData(endpoint, key, (draft) => {
+                  postsAdapter.removeOne(draft, tempId);
+                  postsAdapter.addOne(draft, data);
+                }),
+              );
+            });
           } catch (err) {
             console.log({ err });
-            patchResult.undo();
+            patchResults.forEach((patchResult) => patchResult.undo());
           }
         },
       }),
@@ -84,10 +102,8 @@ export const postApi = rootApi.injectEndpoints({
             params: { limit, offset },
           };
         },
-        // chuẩn hóa sang entity trong redux
+        keepUnusedDataFor: 0,
         transformResponse: (response) => {
-          // response là cái gì trả về từ api
-          // đẩy vào adapter
           return postsAdapter.upsertMany(initialState, response);
         },
         serializeQueryArgs: () => "allPosts",
@@ -98,6 +114,50 @@ export const postApi = rootApi.injectEndpoints({
         },
         providesTags: [{ type: "POSTS" }],
       }),
+      getPostsByAuthorId: builder.query({
+        query: ({ limit, offset, userId } = {}) => {
+          return {
+            url: `/posts/author/${userId}`,
+            params: { limit, offset },
+          };
+        },
+        keepUnusedDataFor: 0,
+        transformResponse: (response) => {
+          const postNormalized = postsAdapter.upsertMany(
+            initialState,
+            response.posts,
+          );
+
+          return {
+            ...postNormalized,
+            meta: {
+              total: response.total,
+              limit: response.limit,
+              offset: response.offset,
+            },
+          };
+        },
+        serializeQueryArgs: ({ queryArgs }) => ({
+          userId: queryArgs.userId,
+        }),
+        // key: endpoint + (params)
+        // `userProfilePosts-${queryArgs.limit}`,
+        merge: (currentCache, newItems) => {
+          // gop du lieu tu request truoc do + voi du lieu moi sau nay, no luon dam bao (entity adapter)
+          // du lieu se ko bi duplicate boi vi no da co 1 he thong cac ids duy nhat
+          return postsAdapter.upsertMany(currentCache, newItems.entities);
+        },
+        providesTags: (result) =>
+          result?.posts
+            ? [
+                ...result.posts.map(({ _id }) => ({
+                  type: "GET_POSTS_BY_AUTHOR_ID",
+                  id: _id,
+                })),
+                { type: "GET_POSTS_BY_AUTHOR_ID", id: "LIST" },
+              ]
+            : [{ type: "GET_POSTS_BY_AUTHOR_ID", id: "LIST" }],
+      }),
       likePost: builder.mutation({
         query: (postId) => {
           return {
@@ -105,57 +165,79 @@ export const postApi = rootApi.injectEndpoints({
             method: "POST",
           };
         },
-        // fake update ngay lập tức mà k cần loading khi like
-        // query các bài post đang được cache => tìm bài đang lik => update lại arraylike
         onQueryStarted: async (
-          args, // là cái postId luôn
+          args,
           { dispatch, queryFulfilled, getState },
         ) => {
           const store = getState();
           const tempId = crypto.randomUUID();
-          const patchResult = dispatch(
-            rootApi.util.updateQueryData("getPosts", "allPosts", (draft) => {
-              const currentPost = draft.entities[args];
-              if (currentPost) {
-                currentPost.likes.push({
-                  author: {
-                    _id: store.auth.userInfo._id,
-                    fullName: store.auth.userInfo.fullName,
-                  },
-                  _id: tempId,
-                });
-              }
-            }),
+
+          // láy dữ liệu caching  của hàm này getPostsByAuthorId
+          const userProfilePostsArgs = rootApi.util.selectCachedArgsForQuery(
+            store,
+            "getPostsByAuthorId",
           );
 
-          try {
-            const { data } = await queryFulfilled;
+          const patchResults = [];
+          const cachingPairs = [
+            ...userProfilePostsArgs.map((arg) => [
+              "getPostsByAuthorId",
+              { userId: arg.userId },
+            ]),
+            ["getPosts", "allPosts"],
+          ];
 
-            dispatch(
-              rootApi.util.updateQueryData("getPosts", "allPosts", (draft) => {
+          cachingPairs.forEach(([endpoint, key]) => {
+            const patchResult = dispatch(
+              rootApi.util.updateQueryData(endpoint, key, (draft) => {
                 const currentPost = draft.entities[args];
                 if (currentPost) {
-                  currentPost.likes = currentPost.likes.map((like) => {
-                    if (like._id === tempId) {
-                      return {
-                        author: {
-                          _id: store.auth.userInfo._id,
-                          fullName: store.auth.userInfo.fullName,
-                        },
-                        createdAt: data.createdAt,
-                        updatedAt: data.updatedAt,
-                        _id: data._id,
-                      };
-                    }
-
-                    return like;
+                  currentPost.likes.push({
+                    author: {
+                      _id: store.auth.userInfo._id,
+                      fullName: store.auth.userInfo.fullName,
+                    },
+                    _id: tempId,
                   });
                 }
               }),
             );
+
+            patchResults.push(patchResult);
+          });
+
+          try {
+            const { data } = await queryFulfilled;
+
+            cachingPairs.forEach(([endpoint, key]) => {
+              dispatch(
+                rootApi.util.updateQueryData(endpoint, key, (draft) => {
+                  const currentPost = draft.entities[args];
+                  if (currentPost) {
+                    currentPost.likes = currentPost.likes.map((like) => {
+                      if (like._id === tempId) {
+                        return {
+                          author: {
+                            _id: store.auth.userInfo._id,
+                            fullName: store.auth.userInfo.fullName,
+                          },
+                          createdAt: data.createdAt,
+                          updatedAt: data.updatedAt,
+                          _id: data._id,
+                        };
+                      }
+
+                      return like;
+                    });
+                  }
+                }),
+              );
+            });
           } catch (err) {
             console.log({ err });
-            patchResult.undo();
+            patchResults.forEach((patchResult) => {
+              patchResult.undo();
+            });
           }
         },
       }),
@@ -171,22 +253,42 @@ export const postApi = rootApi.injectEndpoints({
           { dispatch, queryFulfilled, getState },
         ) => {
           const store = getState();
-          const patchResult = dispatch(
-            rootApi.util.updateQueryData("getPosts", "allPosts", (draft) => {
-              const currentPost = draft.entities[args];
-              if (currentPost) {
-                currentPost.likes = currentPost.likes.filter(
-                  (like) => like.author._id !== store.auth.userInfo._id,
-                );
-              }
-            }),
+
+          // Lấy dữ liệu caching
+          const userProfilePostsArgs = rootApi.util.selectCachedArgsForQuery(
+            store,
+            "getPostsByAuthorId",
           );
+
+          const patchResults = [];
+          const cachingPairs = [
+            ...userProfilePostsArgs.map((arg) => [
+              "getPostsByAuthorId",
+              { userId: arg.userId },
+            ]),
+            ["getPosts", "allPosts"],
+          ];
+
+          cachingPairs.forEach(([endpoint, key]) => {
+            const patchResult = dispatch(
+              rootApi.util.updateQueryData(endpoint, key, (draft) => {
+                const currentPost = draft.entities[args];
+                if (currentPost) {
+                  currentPost.likes = currentPost.likes.filter(
+                    (like) => like.author._id !== store.auth.userInfo._id,
+                  );
+                }
+              }),
+            );
+
+            patchResults.push(patchResult);
+          });
 
           try {
             await queryFulfilled;
           } catch (err) {
             console.log({ err });
-            patchResult.undo();
+            patchResults.forEach((patchResult) => patchResult.undo());
           }
         },
       }),
@@ -216,45 +318,67 @@ export const postApi = rootApi.injectEndpoints({
             updatedAt: new Date().toISOString(),
           };
 
-          const patchResult = dispatch(
-            rootApi.util.updateQueryData("getPosts", "allPosts", (draft) => {
-              const currentPost = draft.entities[params.postId];
-
-              if (currentPost) {
-                currentPost.comments.push(optimisticComment);
-              }
-            }),
+          const userProfilePostsArgs = rootApi.util.selectCachedArgsForQuery(
+            store,
+            "getPostsByAuthorId",
           );
+          const cachingPairs = [
+            ...userProfilePostsArgs.map((arg) => [
+              "getPostsByAuthorId",
+              { userId: arg.userId },
+            ]),
+            ["getPosts", "allPosts"],
+          ];
+          const patchResults = [];
 
-          try {
-            const { data } = await queryFulfilled;
-            dispatch(
-              rootApi.util.updateQueryData("getPosts", "allPosts", (draft) => {
+          cachingPairs.forEach(([endpoint, key]) => {
+            const patchResult = dispatch(
+              rootApi.util.updateQueryData(endpoint, key, (draft) => {
                 const currentPost = draft.entities[params.postId];
-                if (currentPost) {
-                  const commentIndex = currentPost.comments.findIndex(
-                    (comment) => comment._id === tempId,
-                  );
 
-                  if (commentIndex !== -1) {
-                    currentPost.comments[commentIndex] = data;
-                  }
+                if (currentPost) {
+                  currentPost.comments.push(optimisticComment);
                 }
               }),
             );
+
+            patchResults.push(patchResult);
+          });
+
+          try {
+            const { data } = await queryFulfilled;
+
+            cachingPairs.forEach(([endpoint, key]) => {
+              dispatch(
+                rootApi.util.updateQueryData(endpoint, key, (draft) => {
+                  const currentPost = draft.entities[params.postId];
+                  if (currentPost) {
+                    const commentIndex = currentPost.comments.findIndex(
+                      (comment) => comment._id === tempId,
+                    );
+
+                    if (commentIndex !== -1) {
+                      currentPost.comments[commentIndex] = data;
+                    }
+                  }
+                }),
+              );
+            });
           } catch (err) {
             console.log({ err });
-            patchResult.undo();
+            patchResults.forEach((patchResult) => patchResult.undo());
           }
         },
       }),
     };
   },
 });
+
 export const {
   useCreatePostMutation,
   useGetPostsQuery,
   useLikePostMutation,
   useUnlikePostMutation,
   useCreateCommentMutation,
+  useGetPostsByAuthorIdQuery,
 } = postApi;

@@ -7,8 +7,8 @@ import {
   useUnlikePostMutation,
 } from "@services/postApi";
 
-const PostList = () => {
-  const { isFetching, posts } = useLazyLoadPosts();
+const PostList = ({ userId }) => {
+  const { isFetching, posts } = useLazyLoadPosts({ userId });
   const [likePost] = useLikePostMutation();
   const [unlikePost] = useUnlikePostMutation();
   const { createNotification } = useNotifications();
@@ -24,6 +24,7 @@ const PostList = () => {
           createdAt={post.createdAt}
           content={post.content}
           image={post.image}
+          authorId={post.author?._id}
           likes={post.likes}
           comments={post.comments}
           isLiked={post.likes.some((like) => like.author?._id === _id)}

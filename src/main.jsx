@@ -1,6 +1,10 @@
 import ReactDOM from "react-dom/client";
 import "./index.css";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {
+  createBrowserRouter,
+  Navigate,
+  RouterProvider,
+} from "react-router-dom";
 import RootLayout from "@pages/RootLayout";
 import { lazy } from "react";
 import { ThemeProvider } from "@mui/material";
@@ -17,6 +21,9 @@ import { PersistGate } from "redux-persist/integration/react";
 import Dialog from "@components/Dialog";
 import Loading from "@components/Loading";
 import SearchUsersPage from "@pages/SearchUsersPage";
+import About from "@pages/UserProfile/About";
+import FriendLists from "@pages/UserProfile/FriendLists";
+const UserProfilePage = lazy(() => import("@pages/UserProfile/UserProfile"));
 const router = createBrowserRouter([
   {
     element: <RootLayout />,
@@ -31,6 +38,24 @@ const router = createBrowserRouter([
           {
             path: "/search/users",
             element: <SearchUsersPage />,
+          },
+          {
+            path: "/users/:userId",
+            element: <UserProfilePage />,
+            children: [
+              {
+                index: true,
+                element: <Navigate to="about" replace />,
+              },
+              {
+                path: "about",
+                element: <About />,
+              },
+              {
+                path: "friends",
+                element: <FriendLists />,
+              },
+            ],
           },
         ],
       },
