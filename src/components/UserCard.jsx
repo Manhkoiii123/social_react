@@ -1,4 +1,4 @@
-import { Check, Close, MessageOutlined, PersonAdd } from "@mui/icons-material";
+import { Check, Close, MessageOutlined, PersonAdd, PersonRemove } from "@mui/icons-material";
 import { Avatar, Button, CircularProgress } from "@mui/material";
 
 import { Link } from "react-router-dom";
@@ -9,7 +9,87 @@ import {
   useCancelFriendRequestMutation,
   useSendFriendRequestMutation,
 } from "@services/friendApi";
+import { Events } from "@libs/constants";
+export function UserActionButtons({
+  userId,
+  isFriend,
+  requestSent,
+  requestReceived,
+}) {
+  const [sendFriendRequest, { isLoading: isAddingFriend }] =
+    useSendFriendRequestMutation();
+  const [acceptFriendRequest, { isLoading: isAccepting }] =
+    useAcceptFriendRequestMutation();
+  const [cancelFriendRequest, { isLoading: isCanceling }] =
+    useCancelFriendRequestMutation();
 
+  if (isFriend) {
+    return (
+      <div className="mt-2 space-x-1">
+        <MyButton variant="outlined" size="small">
+          <PersonRemove className="mr-1" fontSize="small" /> Unfriend
+        </MyButton>
+        <MyButton variant="contained" size="small">
+          <MessageOutlined className="mr-1" fontSize="small" /> Message
+        </MyButton>
+      </div>
+    );
+  }
+
+  if (requestSent) {
+    return (
+      <MyButton variant="contained" size="small" disabled>
+        <Check className="mr-1" fontSize="small" /> Request Sent
+      </MyButton>
+    );
+  }
+
+  if (requestReceived) {
+    return (
+      <div className="mt-2 space-x-1">
+        <MyButton
+          variant="contained"
+          size="small"
+          onClick={() => acceptFriendRequest(userId)}
+          icon={<Check className="mr-1" fontSize="small" />}
+          isLoading={isAccepting}
+        >
+          Accept
+        </MyButton>
+
+        <MyButton
+          variant="outlined"
+          size="small"
+          onClick={() => cancelFriendRequest(userId)}
+          icon={<Close className="mr-1" fontSize="small" />}
+          isLoading={isCanceling}
+        >
+          Cancel
+        </MyButton>
+      </div>
+    );
+  }
+
+  return (
+    <MyButton
+      variant="outlined"
+      onClick={async () => {
+        await sendFriendRequest(userId).unwrap();
+        socket.emit(Events.FRIEND_REQUEST_SENT, {
+          receiverId: userId,
+        });
+      }}
+      disabled={isAddingFriend}
+    >
+      {isAddingFriend ? (
+        <CircularProgress className="mr-1 animate-spin" size="16px" />
+      ) : (
+        <PersonAdd className="mr-1" fontSize="small" />
+      )}{" "}
+      Add Friend
+    </MyButton>
+  );
+}
 const UserCard = ({
   id,
   isFriend,

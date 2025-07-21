@@ -41,7 +41,11 @@ const Header = () => {
         horizontal: "right",
       }}
     >
-      <MenuItem>Profile</MenuItem>
+      <MenuItem>
+        <Link to={`/users/${userInfo._id}`} onClick={handleMenuClose}>
+          Profile
+        </Link>
+      </MenuItem>
       <MenuItem onClick={() => logOut()}>Logout</MenuItem>
     </Menu>
   );

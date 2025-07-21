@@ -3,13 +3,13 @@ import { theme } from "@configs/muiConfig";
 import { Link, Outlet, useLocation, useParams } from "react-router-dom";
 import { useUserInfo } from "@hooks/index";
 import { useGetUserInfoByIdQuery } from "@services/userApi";
-// import { UserActionButtons } from "@components/UserCard";
+import { UserActionButtons } from "@components/UserCard";
 
 function UserProfile() {
   const { userId } = useParams();
   const location = useLocation();
   const { _id } = useUserInfo();
-  const { data = {}, isLoading, isFetching } = useGetUserInfoByIdQuery(userId);
+  const { data = {} } = useGetUserInfoByIdQuery(userId);
 
   const isMyProfile = userId === _id;
 
@@ -63,14 +63,14 @@ function UserProfile() {
             </div>
           </div>
           <div>
-            {/* {!isMyProfile && (
+            {!isMyProfile && (
               <UserActionButtons
                 userId={userId}
                 requestSent={data.requestSent}
                 requestReceived={data.requestReceived}
                 isFriend={data.isFriend}
               />
-            )} */}
+            )}
           </div>
         </div>
         <div className="pt-40 sm:pt-28">
@@ -110,8 +110,7 @@ function UserProfile() {
           </div>
         </div>
       </div>
-      {/* context={{ userData: data, isMyProfile }} */}
-      <Outlet />
+      <Outlet context={{ userData: data, isMyProfile }} />
     </div>
   );
 }
