@@ -23,6 +23,7 @@ import Loading from "@components/Loading";
 import SearchUsersPage from "@pages/SearchUsersPage";
 import About from "@pages/UserProfile/About";
 import FriendLists from "@pages/UserProfile/FriendLists";
+import AccountSettings from "@pages/AccountSettings";
 const UserProfilePage = lazy(() => import("@pages/UserProfile/UserProfile"));
 const router = createBrowserRouter([
   {
@@ -54,6 +55,15 @@ const router = createBrowserRouter([
               {
                 path: "friends",
                 element: <FriendLists />,
+              },
+            ],
+          },
+          {
+            path: "/settings",
+            children: [
+              {
+                path: "account",
+                element: <AccountSettings />,
               },
             ],
           },

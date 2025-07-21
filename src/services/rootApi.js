@@ -90,6 +90,7 @@ export const rootApi = createApi({
       }),
       getAuthUser: builder.query({
         query: () => "/auth-user",
+        providesTags: [{ type: "GET_AUTH_USER" }],
       }),
       refreshToken: builder.mutation({
         query: (refreshToken) => {
