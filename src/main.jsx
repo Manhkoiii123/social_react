@@ -24,6 +24,8 @@ import SearchUsersPage from "@pages/SearchUsersPage";
 import About from "@pages/UserProfile/About";
 import FriendLists from "@pages/UserProfile/FriendLists";
 import AccountSettings from "@pages/AccountSettings";
+import MessagePage from "@pages/MessagePage";
+import ChatDetail from "@components/Messages/ChatDetail";
 const UserProfilePage = lazy(() => import("@pages/UserProfile/UserProfile"));
 const router = createBrowserRouter([
   {
@@ -35,6 +37,16 @@ const router = createBrowserRouter([
           {
             path: "/",
             element: <HomePage />,
+          },
+          {
+            path: "/messages",
+            element: <MessagePage />,
+            children: [
+              {
+                path: ":userId",
+                element: <ChatDetail />,
+              },
+            ],
           },
           {
             path: "/search/users",
