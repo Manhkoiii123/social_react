@@ -58,6 +58,34 @@ const SocketProvider = ({ children }) => {
       );
     });
 
+    socket.on(Events.SEND_MESSAGE, (data) => {
+      dispatch(
+        rootApi.util.updateQueryData(
+          "getMessages",
+          { userId: data.sender._id },
+          (draft) => {
+            draft.messages.push(data);
+          },
+        ),
+      );
+
+      dispatch(
+        rootApi.util.updateQueryData("getConversations", undefined, (draft) => {
+          let currentConversationIndex = draft.findIndex(
+            (message) =>
+              message.sender._id === data.sender._id ||
+              message.receiver._id === data.sender._id,
+          );
+
+          if (currentConversationIndex !== -1) {
+            draft.splice(currentConversationIndex, 1);
+          }
+
+          draft.unshift(data);
+        }),
+      );
+    });
+
     return () => {
       socket.off(Events.CREATE_NOTIFICATION_REQUEST);
     };

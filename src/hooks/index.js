@@ -155,7 +155,7 @@ export const useNotifications = () => {
       notificationTypeId,
     }).unwrap();
 
-    socket.emit(Events.CREATE_NOTIFICATION, notification);
+    socket.emit(Events.CREATE_NOTIFICATION, { notification, testing: false });
   }
 
   return { createNotification };

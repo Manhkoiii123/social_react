@@ -1,4 +1,10 @@
-import { Check, Close, MessageOutlined, PersonAdd, PersonRemove } from "@mui/icons-material";
+import {
+  Check,
+  Close,
+  MessageOutlined,
+  PersonAdd,
+  PersonRemove,
+} from "@mui/icons-material";
 import { Avatar, Button, CircularProgress } from "@mui/material";
 
 import { Link } from "react-router-dom";
@@ -29,7 +35,11 @@ export function UserActionButtons({
         <MyButton variant="outlined" size="small">
           <PersonRemove className="mr-1" fontSize="small" /> Unfriend
         </MyButton>
-        <MyButton variant="contained" size="small">
+        <MyButton
+          variant="contained"
+          size="small"
+          inputProps={{ component: Link, to: `/messages/${userId}` }}
+        >
           <MessageOutlined className="mr-1" fontSize="small" /> Message
         </MyButton>
       </div>

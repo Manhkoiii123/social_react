@@ -1,9 +1,10 @@
-import { Avatar, Tab, Tabs } from "@mui/material";
+import { Tab, Tabs } from "@mui/material";
 import { theme } from "@configs/muiConfig";
 import { Link, Outlet, useLocation, useParams } from "react-router-dom";
 import { useUserInfo } from "@hooks/index";
 import { useGetUserInfoByIdQuery } from "@services/userApi";
 import { UserActionButtons } from "@components/UserCard";
+import UserAvatar from "@components/UserAvatar";
 
 function UserProfile() {
   const { userId } = useParams();
@@ -43,14 +44,17 @@ function UserProfile() {
     <div className="container flex-col">
       <div className="card relative p-0">
         <img
-          className="h-36 object-cover sm:h-80"
-          src="https://placehold.co/1920x540"
+          className="h-36 w-full object-cover sm:h-80"
+          src={data.coverImage ?? "https://placehold.co/1920x540"}
         />
         <div className="absolute mb-3 flex w-full -translate-y-1/3 transform flex-col items-center px-6 sm:-translate-y-1/2 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-end">
-            <Avatar className="!h-24 !w-24 border-4 border-white !bg-primary-main !text-6xl sm:!h-44 sm:!w-44">
-              {fullName?.[0]?.toUpperCase()}
-            </Avatar>
+            <UserAvatar
+              name={fullName}
+              src={data.image}
+              className="!h-24 !w-24 border-4 border-white !text-6xl sm:!h-44 sm:!w-44"
+            />
+
             <div className="text-center sm:text-left">
               <p className="max-w-80 truncate text-2xl font-bold sm:text-3xl">
                 {fullName}
@@ -97,6 +101,7 @@ function UserProfile() {
               }}
             >
               {TABS.map((tab) => {
+                console.log({ tab });
                 return (
                   <Tab
                     key={tab.path}

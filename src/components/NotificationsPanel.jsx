@@ -1,12 +1,89 @@
-import { generateNotificationMessage } from "@libs/utils";
 import { Circle, Notifications } from "@mui/icons-material";
 import { Badge, IconButton, Menu, MenuItem } from "@mui/material";
 import { useGetNotificationsQuery } from "@services/notificationApi";
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import TimeAgo from "./TimeAgo";
+import UserAvatar from "./UserAvatar";
+
+const NotificationItem = ({ notification, onClick }) => {
+  if (notification.like)
+    return (
+      <Link to={`/users/${notification.author?._id}`} onClick={onClick}>
+        <div className="flex items-center gap-1">
+          <UserAvatar
+            name={notification.author?.fullName}
+            src={notification.author?.image}
+          />
+          <div>
+            <div>
+              <p className="inline-block font-semibold">
+                {notification.author?.fullName}
+              </p>{" "}
+              liked a post
+            </div>
+            <TimeAgo
+              date={notification.createdAt}
+              className="-mt-[1px] text-xs text-dark-400"
+            />
+          </div>
+        </div>
+      </Link>
+    );
+  if (notification.comment)
+    return (
+      <Link to={`/users/${notification.author?._id}`} onClick={onClick}>
+        <div className="flex items-center gap-1">
+          <UserAvatar
+            name={notification.author?.fullName}
+            src={notification.author?.image}
+          />
+          <div>
+            <div>
+              <p className="inline-block font-semibold">
+                {notification.author?.fullName}
+              </p>{" "}
+              commented a post
+            </div>
+            <TimeAgo
+              date={notification.createdAt}
+              className="-mt-[1px] text-xs text-dark-400"
+            />
+          </div>
+        </div>
+      </Link>
+    );
+  if (notification.message) {
+    return (
+      <Link to={`/messages/${notification.author?._id}`} onClick={onClick}>
+        <div className="flex items-center gap-1">
+          <UserAvatar
+            name={notification.author?.fullName}
+            src={notification.author?.image}
+          />
+          <div>
+            <div>
+              <p className="inline-block font-semibold">
+                {notification.author?.fullName}
+              </p>{" "}
+              sent a message
+            </div>
+            <TimeAgo
+              date={notification.createdAt}
+              className="-mt-[1px] text-xs text-dark-400"
+            />
+          </div>
+        </div>
+      </Link>
+    );
+  }
+  return "";
+};
 
 const NotificationsPanel = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const { data = {} } = useGetNotificationsQuery();
+  console.log({ data });
 
   const handleMenuClose = () => {
     setAnchorEl(null);
@@ -36,9 +113,12 @@ const NotificationsPanel = () => {
     >
       {(data?.notifications || []).map((notification) => (
         <MenuItem key={notification._id} className="flex !justify-between">
-          <p>{generateNotificationMessage(notification)}</p>
+          <NotificationItem
+            notification={notification}
+            onClick={handleMenuClose}
+          />
           {!notification.seen && (
-            <Circle fontSize="10px" className="text-primary-main" />
+            <Circle className="ml-1 !h-2 !w-2 text-primary-main" />
           )}
         </MenuItem>
       ))}
