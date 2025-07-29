@@ -12,10 +12,15 @@ import { useEffect } from "react";
 import { useMemo } from "react";
 import { useGetUserInfoByIdQuery } from "../../services/userApi";
 import UserAvatar from "../UserAvatar";
+import { IconButton } from "@mui/material";
+import { Videocam } from "@mui/icons-material";
+import { useState } from "react";
+import VideoCallRoom from "../VideoCall/VideoCallRoom";
 
 const ChatDetail = () => {
   const { userId } = useParams();
   const messageEndRef = useRef();
+  const [isInCall, setIsInCall] = useState(false);
   const { _id: currentUserId } = useUserInfo();
   const { data: partnerInfo } = useGetUserInfoByIdQuery(userId); // thông tin ng nhắn cùng mình
   const { data = { messages: [], pagination: {} } } = useGetMessagesQuery({
@@ -84,14 +89,21 @@ const ChatDetail = () => {
     return getGroupedMessages(data.messages);
   }, [data.messages]);
 
+  const handleStartCall = () => {
+    setIsInCall(true);
+  };
+
   return (
     <div className="card bg-dark-600 flex h-[calc(100vh-150px)] flex-col rounded-l-none pt-0">
       {partnerInfo && (
-        <div className="-mx-4 border-b border-dark-300 bg-white px-7 py-3 shadow">
+        <div className="-mx-4 flex justify-between border-b border-dark-300 bg-white px-7 py-3 shadow">
           <div className="flex items-center">
             <UserAvatar name={partnerInfo.fullName} src={partnerInfo.image} />
             <p className="ml-3 font-medium">{partnerInfo.fullName}</p>
           </div>
+          <IconButton onClick={handleStartCall}>
+            <Videocam />
+          </IconButton>
         </div>
       )}
       <div className="flex max-h-[calc(100%-65px)] flex-1 flex-col justify-between">
@@ -155,6 +167,7 @@ const ChatDetail = () => {
         </div>
         <MessageCreation userId={userId} messageEndRef={messageEndRef} />
       </div>
+      <VideoCallRoom isInCall={isInCall} />
     </div>
   );
 };
